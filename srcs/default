@@ -1,0 +1,62 @@
+server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+        include /etc/nginx/conf.d/*.conf;
+
+		server_name localhost;
+		return 302 https://$host$request_uri;
+}
+
+server{
+
+	listen 443 ssl default_server;
+        listen [::]:443 ssl default_server;
+
+	ssl_certificate /selfsigned.crt;
+	ssl_certificate_key /selfsigned.key;
+
+	root /var/www/html;
+        location / {
+                # First attempt to serve request as file, then
+                # as directory, then fall back to displaying a 404.
+                try_files $uri $uri/ =404;
+        }
+        location /phpmyadmin {
+               root /usr/share/;
+               index index.php index.html index.htm;
+               location ~ ^/phpmyadmin/(.+\.php)$ {
+                       try_files $uri =404;
+                       root /usr/share/;
+                       fastcgi_pass unix:/var/run/php/php7.3-fpm.sock;
+                       fastcgi_index index.php;
+                       fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+                       include /etc/nginx/fastcgi_params;
+               }
+               location ~* ^/phpmyadmin/(.+\.(jpg|jpeg|gif|css|png|js|ico|html|xml|txt))$ {
+                       root /usr/share/;
+               }
+        }
+        location /phpMyAdmin {
+               rewrite ^/* /phpmyadmin last;
+        }
+
+        # pass PHP scripts to FastCGI server
+        #
+        location ~ \.php$ {
+               include snippets/fastcgi-php.conf;
+        #
+        #       # With php-fpm (or other unix sockets):
+               fastcgi_pass unix:/run/php/php7.3-fpm.sock;
+        #       # With php-cgi (or other tcp sockets):
+        #      fastcgi_pass 127.0.0.1:9000;
+        }
+
+        # deny access to .htaccess files, if Apache's document root
+        # concurs with nginx's one
+        #
+        location ~ /\.ht {
+               deny all;
+        }
+	index index.php index.htm index.nginx-debian.html;
+
+}

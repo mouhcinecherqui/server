@@ -1,0 +1,1 @@
+openssl req -newkey rsa:2048 -nodes -keyout selfsigned.key -x509 -days 365 -out selfsigned.crt -subj "/C=MA/ST=Khouribga/L=Khouribga/O=1337/CN=10.11.7.7"
